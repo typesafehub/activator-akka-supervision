@@ -1,0 +1,151 @@
+<html>
+<head>
+    <title>Hello Scala - Activator Template</title>
+</head>
+<body>
+<div>
+    <h2> Explore the Code</h2>
+
+    <p>You've just created a Scala application!  This is a basic "Hello, World"
+       application.   Let's look at the <a href="#code/app/Hello.scala"
+      class="shortcut">app/Hello.scala</a> file.</p>
+
+    <p>This file consists of a single object called <code>Hello</code>.  This
+       object defines a <code>main</code> method, which denotes that it can be run as a
+       standalone application.  Let's look into the definition of the main method:</p>
+<pre><code>def main(args: Array[String]): Unit = </code></pre>
+    <p> The method definition starts with the keyword "<code>def</code>".   This is used to define all
+       methods in scala.  After def comes the name of the method, in this case "main".</p>
+    <p>Following the name is the argument list, denoting input parameters to the method.  In
+       the case of the "<code>main</code>" method, it takes a single parameter called "<code>args</code>".
+       When the application is executed, any command line arguments will be bundled into an array 
+       of string values (or "<code>Array[String]</code>") and passed into the "<code>main</code>" method.</p>
+    <p>Following the argument list is the return type of the method.  For main, this is "<code>Unit</code>" which
+       denotes "uninteresting" return type.   It is similar to the "void" type of Java/C/C++ in that we aren't
+       interesting in calling the "<code>main</code>" method for a return value.
+    <p>Following the return type is an "<code>=</code>" character and then the method implementation.
+       For the <code>Hello.main</code> method, the implementation is the following block of code:
+    </p>
+    <pre><code>{
+  println("Hello, World")
+}</code></pre>
+
+    <p>This block of code uses the <code>println</code> method to display the string
+       literal "Hello, world!" on the console.  We can see this output by
+       clicking on the <a class="shortcut" href="#run">Run</a> tab.
+    </p>
+</div>
+<div>
+    <h2> Running Applications</h2>
+
+    <p>The result of running the <code>Hello</code> application is shown in the 
+        <a href="#run" class="shortcut">Run</a> tab.  On the left-hand side we can
+        see the console output, which is "Hello, world!" for the <code>Hello</code>
+        application.</p>
+
+    <p>Let's make changes to the <code>Hello</code> application and see what happens.</p>
+
+    <p>First, go back to <a href="#code/app/Hello.scala"
+       class="shortcut">Hello.scala</a> and change 
+       <pre><code>println("Hello, world!")</code></pre> 
+       to 
+       <pre><code>println("Hello, Activator!")</code></pre> 
+       and select "Save".</p>
+    <p>Now, come back to the <a href="#run" class="shortcut">Run</a> tab.  After
+       recompiling and running the project, you should see the console output now
+       shows: <pre><code>Hello, Activator!</code></pre></p>
+</div>
+<div>
+    <h2>Defining Values</h2>
+
+    <p>Let's go back to <a href="#code/app/Hello.scala" class="shortcut">Hello.scala</a>
+       and start mucking with the code.</p>
+
+    <p>First, we'd like to have our application also say goodbye.   Let's add the
+       following line to the end of the Hello main method's body:
+    <p>
+    <pre><code>println("Goodbye, Activator!")</pre></code>
+
+    <p>Save the file and then navigate back to the <a href="#run" class="shortcut">Run</a> tab, and you should see:</p>
+
+<pre><code>Hello, Activator!
+Goodbye, Activator!</pre></code>
+
+    <p> Now, we'd like to re-use the name for the greeting and farewell text.  To do so, we're going to use a <code>def</code> in Scala.
+       A <code>def</code> denotes a method, or block of re-usable code.  Let's modify our <a href="#code/app/Hello.scala" class="shortcut">Hello</a> app as follows:
+    </p>
+<pre><code>
+object Hello {
+  val who = "Activator"
+
+  def main(args: Array[String]): Unit = {
+    println("Hello, " + who + "!")
+    println("Goodbye, " + who + "!")
+  }
+}
+</code></pre>
+    <p>This new code creates a <code>val</code> called "<code>who</code>" which is used in the greeting messages.  After defining the value, everytime the "<code>who</code>" name is referenced, the value we've stored will be used.</p>
+    <p>The <code>+</code> operator is used to join the necessary strings together before passing to the <code>println</code> method.  If we swap back to the <a href="#run" class="shortcut">Run</a> tab, we'll see that the greeting and goodbye messages remain unchanged.
+    </p>
+    <p>In Scala, a "val" represents a re-usable piece of data or computation that we do not want to re-run.   Once set, a val points to the same information forever.  In
+       other words, it is immutable.</p>
+</div>
+<div>
+    <h2>Testing Applications</h2>
+
+    <p>No app, regardless of how simple, is complete without a modicum of testing!   Let's modify our existing tests to account for the new "<code>who</code>" method we've added.</p>
+
+     <p>Navigate to <a href="#code/test/HelloSpec.scala" class="shortcut">HelloSpec.scala</a> to see our existing test suite.  You should see the following:</p>
+     <pre><code>
+import org.scalatest._
+import org.scalatest.matchers.ShouldMatchers
+
+class HelloSpec extends FlatSpec with ShouldMatchers {
+  "Hello" should "have tests" in {
+    true should be === true
+  }
+}
+</pre></code>
+
+     <p>Let's ignore the imports and class definition for now, and focus on the test itself.   This test is using the <a href="http://scalatest.org">scalatest library</a>.
+        Scalatest provides an elegant way of writing unit tests in Scala.   For our purposes, we're using it to define tests of the hello world application.   Currently, 
+        we have one test:</p>
+<pre><code>true should be === true</pre></code>
+      <p> This test is nested in the categorization/label:</p>
+<pre><code>"Hello" should "have tests"</pre></code>    
+      <p>While it's true that we should have tests in our Hello world application, a test that true is true isn't particularly helpful.  Let's define a test using the new "who"
+      value in the the Hello object.  Modify the test as follows:</p>
+<pre><code>
+  "Hello" should "know who to greet" in {
+    Hello.who should be === "Activator"
+  }
+</pre></code>
+
+    <p>Save this new test, and make sure it runs.   You can see the testing output on the <a href="#test" class="shortcut">Test</a> tab.  Test results are updated automatically
+       after saving a source file, and the build is finished rebuilding your project.</p>
+
+    <p>The new test should show up on the list of tests with the name "Hello should know who to greet", and it should be passing.</p>
+
+    <p>If we take a closer look in the <a href="#code/test/HelloSpec.scala" class="shortcut">code</a>, we're accessing the member "who" on the "Hello" object using the "." notation.  In Scala, we can reference any member on an 
+       object using that object's name, the ".", and the name of the member.</p>
+
+    <p>Now that we've define a single test, it's time to dig further into the Scala language.</p>
+</div>
+
+<div>
+    <h2>Next Steps</h2>
+
+    <p>You're now ready to really start learning how to write application in Scala!   While this tutorial presents the absolute basics of creating applications in Scala,
+       we don't cover the details of the language.  As you explore further tutorials, we recommend toying with code inside of Activator.  You may continue using the browser, 
+       or swap to a command line experience via the "activator" script in the hello-scala directory.</p>
+    <p>If you're interested in learning more about Scala, please look through the following links/tutorials/books:</p>
+    <ul>
+      <li><a href="http://docs.scala-lang.org/tutorials/">Scala Tutorials</a></li>
+      <li><a href="https://www.coursera.org/course/progfun">Functional Programming for Beginners</a> - Martin Odersky's Coursera Course</li>
+      <li><a href="http://twitter.github.io/scala_school/">Scala School</a> - From Twitter</li>
+      <li><a href="http://typesafe.com/resources/book/scala-for-the-impatient">Scala For the Impatient - Free Sample Download from Typesafe</a></li>
+    </ul>
+</div>
+
+</body>
+</html>
