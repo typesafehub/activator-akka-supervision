@@ -22,7 +22,7 @@ object Main {
     calculatorService ! Add(null, null)
     calculatorService ! task
 
-    // Calculat
+    // Calculation happens asynchronously -- we give a small time for the system to finish before we shut it down
     Thread.sleep(1000)
 
     system.shutdown()
