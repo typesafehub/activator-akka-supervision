@@ -10,15 +10,10 @@ import akka.actor.OneForOneStrategy
 // of this example) it is delegated to a worker actor of type
 // FlakyExpressionCalculator.
 class ArithmeticService extends Actor with ActorLogging {
+  import FlakyExpressionCalculator.{FlakinessException, Result}
 
-  // We are customizing the supervisor strategy of the service here. We set
-  // loggingEnabled to false, since we want to have custom logging.
-  // Our strategy here is to restart the child when a recoverable error is
-  // detected (in our case the dummy FlakynessException), but when arithmetic
-  // errors happen -- like division by zero -- we have no hope to recover
-  // therefore we stop the worker.
   override val supervisorStrategy = OneForOneStrategy(loggingEnabled = false) {
-    case _: FlakynessException =>
+    case _: FlakinessException =>
       log.warning("Evaluation of a top level expression failed, restarting.")
       Restart
     case e: ArithmeticException =>
@@ -35,7 +30,7 @@ class ArithmeticService extends Actor with ActorLogging {
     case e: Expression =>
       // We delegate the dangerous task of calculation to a worker, passing the
       // expression as a constructor argument to the actor.
-      context.actorOf(FlakyExpressionCalculator(e, Left))
+      context.actorOf(FlakyExpressionCalculator.props(e, Left))
     case Result(evaluatedExpression, value, _) =>
       log.info("Result {} = {}", evaluatedExpression, value)
   }

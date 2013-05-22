@@ -4,43 +4,31 @@ import akka.actor.{ActorLogging, OneForOneStrategy, Actor, Props}
 import akka.actor.SupervisorStrategy.{Escalate, Restart}
 import scala.collection.immutable._
 import scala.concurrent.forkjoin.ThreadLocalRandom
-
-// Encodes the original position of a sub-expression in its parent expression
-// Example: (4 / 2) has position Left in the original expression (4 / 2) * 3
-trait Position
-case object Left extends Position
-case object Right extends Position
-case class Result(originalExpression: Expression, value: Int, position: Position)
-
-class FlakynessException extends Exception("Flakyness")
+import FlakyExpressionCalculator._
 
 object FlakyExpressionCalculator {
-  def apply(expr: Expression, position: Position): Props =
+  def props(expr: Expression, position: Position): Props =
     Props(classOf[FlakyExpressionCalculator], expr, position)
+
+  // Encodes the original position of a sub-expression in its parent expression
+  // Example: (4 / 2) has position Left in the original expression (4 / 2) * 3
+  trait Position
+  case object Left extends Position
+  case object Right extends Position
+  case class Result(originalExpression: Expression, value: Int, position: Position)
+
+  class FlakinessException extends Exception("Flakiness")
 }
 
 // This actor has the sole purpose of calculating a given expression and
 // return the result to its parent. It takes an additional argument,
 // myPosition, which is used to signal the parent which side of its
 // expression has been calculated.
-// If the expression is a Const then this actor replies to its parent with an
-// immediate answer. If the expression is an arithmetic operation,
-// this actor will create two children workers to first evaluate both sides
-// of the operation and then proceeds evaluating the original expression.
-// For example if (3 + 4) * (11 + 1) is to be evaluated then
-// (3 + 4) is passed to one child worker, and (11 + 1) is to the other. After
-// they return 7 and 12 (in any order), the final value of 7 * 12 = 84 is
-// delivered to the parent.
 class FlakyExpressionCalculator(val expr: Expression, val myPosition: Position)
   extends Actor with ActorLogging {
-  // Similar to the supervisor strategy of the ArithmeticService but when an
-  // ArithmeticException is encountered it is escalated to the parent. The
-  // parent of this actor is either another FlakyExpressionCalculator or the
-  // ArithmeticService. Since the calculators all escalate, no matter how deep
-  // the exception happened, the ArithmeticService will decide on the fate of
-  // the job (in our case, stop it).
+
   override val supervisorStrategy = OneForOneStrategy(loggingEnabled = false) {
-    case _: FlakynessException =>
+    case _: FlakinessException =>
       log.warning("Evaluation of {} failed, restarting.", expr)
       Restart
     case _: ArithmeticException =>
@@ -59,8 +47,10 @@ class FlakyExpressionCalculator(val expr: Expression, val myPosition: Position)
       // Don't forget to stop the actor after it has nothing more to do
       context.stop(self)
     case _ =>
-      context.actorOf(FlakyExpressionCalculator(expr.left, Left), name = "left")
-      context.actorOf(FlakyExpressionCalculator(expr.right, Right), name = "right")
+      context.actorOf(FlakyExpressionCalculator.props(expr.left, Left),
+        name = "left")
+      context.actorOf(FlakyExpressionCalculator.props(expr.right, Right),
+        name = "right")
   }
 
   def receive = {
@@ -69,7 +59,7 @@ class FlakyExpressionCalculator(val expr: Expression, val myPosition: Position)
       results += position -> value
       if (results.size == 2) {
         // Sometimes we fail to calculate
-        flakyness()
+        flakiness()
         val result: Int = evaluate(expr, results(Left), results(Right))
         log.info("Evaluated expression {} to value {}", expr, result)
         context.parent ! Result(expr, result, myPosition)
@@ -89,8 +79,8 @@ class FlakyExpressionCalculator(val expr: Expression, val myPosition: Position)
     case Divide(_, _)   => left / right
   }
 
-  private def flakyness(): Unit =
+  private def flakiness(): Unit =
     if (ThreadLocalRandom.current().nextDouble() < 0.2)
-      throw new FlakynessException
+      throw new FlakinessException
 
 }

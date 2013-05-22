@@ -10,7 +10,7 @@ trait Expression {
 // operation except the constant value has a left and right side. For example
 // the addition in (3 * 2) + (6 * 6) has the left side (3 * 2) and the right
 // side (6 * 6).
-case class Add(left: Expression, right: Expression) extends Expression{
+case class Add(left: Expression, right: Expression) extends Expression {
   override val toString = s"($left + $right)"
 }
 
