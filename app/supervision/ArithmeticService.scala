@@ -10,7 +10,7 @@ import akka.actor.OneForOneStrategy
 // of this example) it is delegated to a worker actor of type
 // FlakyExpressionCalculator.
 class ArithmeticService extends Actor with ActorLogging {
-  import FlakyExpressionCalculator.{FlakinessException, Result}
+  import FlakyExpressionCalculator.{FlakinessException, Result, Left}
 
   override val supervisorStrategy = OneForOneStrategy(loggingEnabled = false) {
     case _: FlakinessException =>
