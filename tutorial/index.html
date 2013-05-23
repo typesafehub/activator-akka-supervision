@@ -9,7 +9,7 @@
     <p>Congratulations! You have just created your first fault-resilient Akka
         application, nice job!</p>
 
-    <p>Let's have an overview on what we have, and what is the problem we want
+    <p>Let's start with an overview and discuss the problem we want
         to solve. This tutorial application demonstrates the use of Akka
         supervision hierarchies to implement reliable systems. This particular
         example demonstrates a calculator service that calculates arithmetic
@@ -78,16 +78,16 @@ Divide(
     <p>Our entry point is the <a
             href="#code/app/supervision/ArithmeticService.scala"
             class="shortcut">ArithmeticService</a> actor that accepts arithmetic
-        expressions, calculates them, and prints the result in the logs. This
+        expressions, calculates them and prints the result in the logs. This
         logic is implemented in the <code>receive</code> block. The actor
-        handles two kind of messages, <code>Expressions</code>, and <code>Result</code>
+        handles two kind of messages, <code>Expressions</code> and <code>Result</code>
         messages.
     </p>
 
-    <p>So where does the <code>Result</code> message come from? Who calculates
+    <p>Where does the <code>Result</code> message come from? Who calculates
         the expression? As you see, on the reception of an
         <code>Expression</code> message we create a <code>FlakyExpressionCalculator</code>
-        actor, and pass the expression as a parameter to its <code>Props</code>.
+        actor and pass the expression as a parameter to its <code>Props</code>.
         What happens here is that we delegate the calculation work to a worker
         actor because the work can be "dangerous".</p>
 </div>
@@ -118,11 +118,11 @@ Divide(
     <p>To handle these kind of failure modes differently we customized the
         supervisor strategy of <code>ArithmeticService</code>. Our strategy here
         is to restart the child when a recoverable error is detected (in our
-        case the dummy <code>FlakynessException</code>), but when arithmetic
+        case the dummy <code>FlakinessException</code>), but when arithmetic
         errors happen &mdash; like division by zero &mdash; we have no hope to recover
-        therefore we stop the worker.</p>
+        and therefore we stop the worker.</p>
 
-    <p>We used <code>OneToOneStrategy</code>, since we only want to act on the
+    <p>We used <code>OneForOneStrategy</code>, since we only want to act on the
         failing child, not on all of our children at the same time.</p>
 
     <p>We set <code>loggingEnabled</code> to false, since we wanted to use our
@@ -135,10 +135,10 @@ Divide(
 
     <h2>The Joy of Calculation</h2>
 
-    <p>So we have now seen our <code>Expression</code> model, our fault modes
+    <p>We have now seen our <code>Expression</code> model, our fault modes
         and how we deal with them at the top level, delegating the dangerous
         work to child workers to isolate the failure, and setting
-        <code>Stop</code> or <code>Retry</code> directives depending on the
+        <code>Stop</code> or <code>Restart</code> directives depending on the
         nature of the failure (fatal or transient). Now it's time to
         calculate and visit <a href="#code/app/supervision/FlakyExpressionCalculator.scala"
                                class="shortcut">FlakyExpressionCalculator.scala</a>!
@@ -154,7 +154,8 @@ Divide(
         the same type (except in the case of constant, when it just sends its
         value as <code>Result</code> to the parent). This logic is in <code>preStart()</code>
         since this is the code that will be executed when an actor starts (and
-        restarts if the <code>postRestart()</code> is not overridden).</p>
+        during restarts if the <code>postRestart()</code> is not
+        overridden).</p>
 
     <p>Since any of the sides of the original expression can finish before the
         other, we have to indicate somehow which side has been calculated, that
@@ -179,19 +180,20 @@ Divide(
         our subexpression, we have to think what different failures mean for
         us.</p>
 
-    <p>If we encounter a FlakinessException it indicates that one of our workers
+    <p>If we encounter a <code>FlakinessException</code> it indicates that one
+        of our workers
         just made a hiccup and failed to calculate the answer. Since we know
         this failure is recoverable, we just restart the responsible worker.</p>
 
     <p>In case of fatal failures we cannot really do anything ourselves. First
         of all, it indicates that the expression is invalid so restart does not
         help, second, we are not necessarily the top level worker for the
-        expression. So when an ArithmeticException is encountered it is
-        escalated to the parent. The parent of this actor is either another
+        expression. When an <code>ArithmeticException</code> is encountered it
+        is escalated to the parent. The parent of this actor is either another
         <code>FlakyExpressionCalculator</code> or the
         <code>ArithmeticService </code>. Since the calculators all escalate, no
-        matter how deep the failure happened, the ArithmeticService will
-        decide on the fate of the job (in our case, stop it).</p>
+        matter how deep the failure happened, the <code>ArithmeticService</code>
+        will decide on the fate of the job (in our case, stop it).</p>
 </div>
 <div>
     <h2>When to Split Work? A Small Detour.</h2>
@@ -247,6 +249,15 @@ Divide(
         <li>Add <code>flakiness()</code> to various places in the calculator and
             see what happens
         </li>
+    </ul>
+
+    <p>You should also visit</p>
+    <ul>
+        <li><a href="http://doc.akka.io/docs/akka/2.2-M3/scala.html"
+               target="_blank">The Akka documentation</a></li>
+        <li><a href="http://doc.akka.io/docs/akka/2.2-M3/scala/fault-tolerance.html"
+               target="_blank">Documentation of supervision</a></li>
+        <li><a href="http://letitcrash.com" target="_blank">The Akka Team blog</a></li>
     </ul>
 </div>
 

@@ -1,9 +1,8 @@
 package supervision
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ActorLogging, Actor, OneForOneStrategy}
 import akka.actor.SupervisorStrategy.{Restart, Stop}
 import scala.util.control.NonFatal
-import akka.actor.OneForOneStrategy
 
 // A very simple service that accepts arithmetic expressions and tries to
 // evaluate them. Since the calculation is dangerous (at least for the sake
@@ -19,7 +18,7 @@ class ArithmeticService extends Actor with ActorLogging {
     case e: ArithmeticException =>
       log.error("Evaluation failed because of: {}", e.getMessage)
       Stop
-    // It is a good practice to use scala.util.control.NonFatal to not match on
+    // It is a good practice to use scala.util.control.NonFatal to not catch
     // dangerous exceptions. See the ScalaDocs for details on what this does.
     case NonFatal(e) =>
       log.error("Unexpected failure: {}", e.getMessage)

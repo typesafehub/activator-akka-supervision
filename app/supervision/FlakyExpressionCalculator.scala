@@ -74,9 +74,9 @@ class FlakyExpressionCalculator(val expr: Expression, val myPosition: Position)
   }
 
   private def evaluate(expr: Expression, left: Int, right: Int): Int = expr match {
-    case Add(_, _)      => left + right
-    case Multiply(_, _) => left * right
-    case Divide(_, _)   => left / right
+    case _: Add      => left + right
+    case _: Multiply => left * right
+    case _: Divide   => left / right
   }
 
   private def flakiness(): Unit =
