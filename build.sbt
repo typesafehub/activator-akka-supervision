@@ -1,4 +1,4 @@
-name := "hello-scala"
+name := "activator-akka-supervision"
 
 version := "1.0"
 
