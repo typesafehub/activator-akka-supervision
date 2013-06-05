@@ -14,7 +14,7 @@
         supervision hierarchies to implement reliable systems. This particular
         example demonstrates a calculator service that calculates arithmetic
         expressions. We will visit each of the components shortly, but you might
-        want to take quick look to the components before we move on.</p>
+        want to take a quick look at the components before we move on.</p>
 
     <ul>
         <li><a href="#code/app/supervision/Expression.scala" class="shortcut">Expression.scala</a>
@@ -78,18 +78,25 @@ Divide(
     <p>Our entry point is the <a
             href="#code/app/supervision/ArithmeticService.scala"
             class="shortcut">ArithmeticService</a> actor that accepts arithmetic
-        expressions, calculates them and prints the result in the logs. This
+        expressions, calculates them and returns the result to the original
+        sender of the <code>Expression</code>.This
         logic is implemented in the <code>receive</code> block. The actor
-        handles two kind of messages, <code>Expressions</code> and <code>Result</code>
-        messages.
+        handles <code>Expression</code> messages and starts a worker for them,
+        carefully recording which worker belongs to which requester in the
+        <code>pendingWorkers</code> map.
     </p>
 
-    <p>Where does the <code>Result</code> message come from? Who calculates
+    <p>Who calculates
         the expression? As you see, on the reception of an
         <code>Expression</code> message we create a <code>FlakyExpressionCalculator</code>
         actor and pass the expression as a parameter to its <code>Props</code>.
         What happens here is that we delegate the calculation work to a worker
-        actor because the work can be "dangerous".</p>
+        actor because the work can be "dangerous". After the worker
+        finishes its job, it replies to its parent (in this
+        case <code>ArithmeticService</code>) with a <code>Result</code>
+        message. At this point the top level service actor looks up which
+        actor it needs to send the final result to, and forwards it the value
+        of the computation.</p>
 </div>
 
 <div>
@@ -116,17 +123,22 @@ Divide(
     </ul>
 
     <p>To handle these kind of failure modes differently we customized the
-        supervisor strategy of <code>ArithmeticService</code>. Our strategy here
+        supervisor strategy of <a
+                href="#code/app/supervision/ArithmeticService.scala"
+                class="shortcut">ArithmeticService</a>. Our strategy here
         is to restart the child when a recoverable error is detected (in our
         case the dummy <code>FlakinessException</code>), but when arithmetic
         errors happen &mdash; like division by zero &mdash; we have no hope to recover
-        and therefore we stop the worker.</p>
+        and therefore we stop the worker. In addition,
+        we have to notify the original requester of the calculation job
+        about the failure.</p>
 
     <p>We used <code>OneForOneStrategy</code>, since we only want to act on the
         failing child, not on all of our children at the same time.</p>
 
     <p>We set <code>loggingEnabled</code> to false, since we wanted to use our
         custom logging instead of the built-in reporting.</p>
+
 
 
 </div>
@@ -151,8 +163,9 @@ Divide(
 
     <p>To achieve this, our worker delegates the calculation of the left and
         right side of the expression it has been given to two child workers of
-        the same type (except in the case of constant, when it just sends its
-        value as <code>Result</code> to the parent). This logic is in <code>preStart()</code>
+        the same type (except in the case of constant, where it just sends its
+        value as <code>Result</code> to its parent.
+        This logic is in <code>preStart()</code>
         since this is the code that will be executed when an actor starts (and
         during restarts if the <code>postRestart()</code> is not
         overridden).</p>
@@ -188,7 +201,7 @@ Divide(
     <p>In case of fatal failures we cannot really do anything ourselves. First
         of all, it indicates that the expression is invalid so restart does not
         help, second, we are not necessarily the top level worker for the
-        expression. When an <code>ArithmeticException</code> is encountered it
+        expression. When an unknown failure is encountered it
         is escalated to the parent. The parent of this actor is either another
         <code>FlakyExpressionCalculator</code> or the
         <code>ArithmeticService </code>. Since the calculators all escalate, no
@@ -202,12 +215,12 @@ Divide(
        and right sides of each of the expressions. The question naturally
        arises: do we gain anything here regarding performance?</p>
 
-    <p>Most likely no. There is additional overhead of splitting up tasks and
-       collecting results, and this case the actual subtasks consist of simple
-       arithmetic operations which are very fast. To really gain in
-       performance in practice, the actual subtasks have to be more
-       heavyweight than this &mdash; but the pattern will be the same
-       nonetheless.</p>
+    <p>In this example more probably not. There is an additional overhead of
+       splitting up tasks and collecting results, and this case the actual
+       subtasks consist of simple arithmetic operations which are very fast.
+       To really gain in performance in practice, the actual subtasks have to
+       be more heavyweight than this &mdash; but the pattern will be the
+       same.</p>
 
 </div>
 <div>
@@ -215,39 +228,13 @@ Divide(
 
     <p>After getting comfortable with the code, you can test your
         understanding by trying to solve the following small exercises:</p>
-
-    <p>Modify <a href="#code/app/supervision/FlakyExpressionCalculator.scala"
-                 class="shortcut">FlakyExpressionCalculator</a> to</p>
     <ul>
-        <li>accept a job identifier in addition to the expression</li>
-        <li>include the identifier in the Result message when the job is
-            finished
-        </li>
-    </ul>
-    <p>Modify <a href="#code/app/supervision/ArithmeticService.scala"
-                 class="shortcut">ArithmeticService</a> so that it</p>
-    <ul>
-        <li>generates a new job id for each incoming expression</li>
-        <li>saves the sender ActorRef of the expression and make it possible to
-            look it up by the job id
-        </li>
-        <li>forwards Results to the original requester using the job id</li>
-    </ul>
-    <p>Modify the example <a href="#code/app/supervision/Main.scala"
-                             class="shortcut">Main</a> app so that it</p>
-    <ul>
-        <li>uses <code>akka.pattern.ask</code> to request the result of an
-            expression
-        </li>
-    </ul>
-    <p>Experiments:</p>
-    <ul>
-        <li>Try devising more calculation intensive nested jobs instead of
-            arithmetic expressions (for example transformations of a text
-            document) where concurrency improves performance
-        </li>
         <li>Add <code>flakiness()</code> to various places in the calculator and
             see what happens
+        </li>
+        <li>Try devising more calculation intensive nested jobs instead of
+            arithmetic expressions (for example transformations of a text
+            document) where parallelism improves performance
         </li>
     </ul>
 
