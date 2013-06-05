@@ -1,6 +1,6 @@
 package supervision
 
-import akka.actor.{ActorLogging, OneForOneStrategy, Actor, Props}
+import akka.actor._
 import akka.actor.SupervisorStrategy.{Escalate, Restart}
 import scala.collection.immutable._
 import scala.concurrent.forkjoin.ThreadLocalRandom
@@ -24,14 +24,16 @@ object FlakyExpressionCalculator {
 // return the result to its parent. It takes an additional argument,
 // myPosition, which is used to signal the parent which side of its
 // expression has been calculated.
-class FlakyExpressionCalculator(val expr: Expression, val myPosition: Position)
+class FlakyExpressionCalculator(
+  val expr: Expression,
+  val myPosition: Position)
   extends Actor with ActorLogging {
 
   override val supervisorStrategy = OneForOneStrategy(loggingEnabled = false) {
     case _: FlakinessException =>
       log.warning("Evaluation of {} failed, restarting.", expr)
       Restart
-    case _: ArithmeticException =>
+    case _ =>
       Escalate
   }
 
