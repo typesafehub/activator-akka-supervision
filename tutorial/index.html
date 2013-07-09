@@ -17,20 +17,20 @@
         want to take a quick look at the components before we move on.</p>
 
     <ul>
-        <li><a href="#code/app/supervision/Expression.scala" class="shortcut">Expression.scala</a>
+        <li><a href="#code/src/main/scala/supervision/Expression.scala" class="shortcut">Expression.scala</a>
             contains our "domain model", a very simple representation of
             arithmetic expressions
         </li>
-        <li><a href="#code/app/supervision/ArithmeticService.scala"
+        <li><a href="#code/src/main/scala/supervision/ArithmeticService.scala"
                class="shortcut">ArithmeticService.scala</a> is the entry point
             for our calculation service
         </li>
-        <li><a href="#code/app/supervision/FlakyExpressionCalculator.scala"
+        <li><a href="#code/src/main/scala/supervision/FlakyExpressionCalculator.scala"
                class="shortcut">FlakyExpressionCalculator.scala</a> is our
             heavy-lifter, a worker actor that can evaluate an expression
             concurrently
         </li>
-        <li><a href="#code/app/supervision/Main.scala" class="shortcut">Main.scala</a>
+        <li><a href="#code/src/main/scala/supervision/Main.scala" class="shortcut">Main.scala</a>
             example code that starts up the calculator service and sends a few
             jobs to it
         </li>
@@ -41,7 +41,7 @@
 
     <p>Our service deals with arithmetic expressions on integers involving
         addition, multiplication and (integer) division. In
-        <a href="#code/app/supervision/Expression.scala" class="shortcut">Expression.scala</a>
+        <a href="#code/src/main/scala/supervision/Expression.scala" class="shortcut">Expression.scala</a>
         you can see a very simple model of these kind of expressions.</p>
 
     <p>Any arithmetic expression is a descendant of <code>Expression</code>, and
@@ -76,7 +76,7 @@ Divide(
     <h2>Arithmetic Service</h2>
 
     <p>Our entry point is the <a
-            href="#code/app/supervision/ArithmeticService.scala"
+            href="#code/src/main/scala/supervision/ArithmeticService.scala"
             class="shortcut">ArithmeticService</a> actor that accepts arithmetic
         expressions, calculates them and returns the result to the original
         sender of the <code>Expression</code>.This
@@ -124,7 +124,7 @@ Divide(
 
     <p>To handle these kind of failure modes differently we customized the
         supervisor strategy of <a
-                href="#code/app/supervision/ArithmeticService.scala"
+                href="#code/src/main/scala/supervision/ArithmeticService.scala"
                 class="shortcut">ArithmeticService</a>. Our strategy here
         is to restart the child when a recoverable error is detected (in our
         case the dummy <code>FlakinessException</code>), but when arithmetic
@@ -152,7 +152,7 @@ Divide(
         work to child workers to isolate the failure, and setting
         <code>Stop</code> or <code>Restart</code> directives depending on the
         nature of the failure (fatal or transient). Now it's time to
-        calculate and visit <a href="#code/app/supervision/FlakyExpressionCalculator.scala"
+        calculate and visit <a href="#code/src/main/scala/supervision/FlakyExpressionCalculator.scala"
                                class="shortcut">FlakyExpressionCalculator.scala</a>!
     </p>
 
