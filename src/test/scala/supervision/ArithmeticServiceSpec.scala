@@ -5,13 +5,12 @@ package supervision
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{Status, Props, ActorSystem}
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.{FlatSpec, BeforeAndAfterAll}
+import org.scalatest.{FlatSpecLike, BeforeAndAfterAll, Matchers}
 
 class ArithmeticServiceSpec(_system: ActorSystem)
   extends TestKit(_system)
-  with FlatSpec
-  with ShouldMatchers
+  with FlatSpecLike
+  with Matchers
   with BeforeAndAfterAll
   with ImplicitSender {
 
