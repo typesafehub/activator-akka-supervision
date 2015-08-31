@@ -19,11 +19,11 @@ class ArithmeticService extends Actor with ActorLogging {
       Restart
     case e: ArithmeticException =>
       log.error("Evaluation failed because of: {}", e.getMessage)
-      notifyConsumerFailure(worker = sender, failure = e)
+      notifyConsumerFailure(worker = sender(), failure = e)
       Stop
     case e =>
       log.error("Unexpected failure: {}", e.getMessage)
-      notifyConsumerFailure(worker = sender, failure = e)
+      notifyConsumerFailure(worker = sender(), failure = e)
       Stop
   }
 
@@ -48,10 +48,10 @@ class ArithmeticService extends Actor with ActorLogging {
         expr = e,
         position = Left)
       )
-      pendingWorkers += worker -> sender
+      pendingWorkers += worker -> sender()
 
     case Result(originalExpression, value, _) =>
-      notifyConsumerSuccess(worker = sender, result = value)
+      notifyConsumerSuccess(worker = sender(), result = value)
   }
 
 }

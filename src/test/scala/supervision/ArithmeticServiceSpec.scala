@@ -7,6 +7,9 @@ import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{Status, Props, ActorSystem}
 import org.scalatest.{FlatSpecLike, BeforeAndAfterAll, Matchers}
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 class ArithmeticServiceSpec(_system: ActorSystem)
   extends TestKit(_system)
   with FlatSpecLike
@@ -16,7 +19,7 @@ class ArithmeticServiceSpec(_system: ActorSystem)
 
   def this() = this(ActorSystem("ArithmeticServiceSpec"))
 
-  override def afterAll: Unit = system.shutdown()
+  override def afterAll: Unit = Await.ready(system.terminate(), Duration.Inf)
 
   val arithmeticService = system.actorOf(Props[ArithmeticService],
     "arithmetic-service")
