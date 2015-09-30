@@ -30,7 +30,6 @@ object Main {
     val result = Await.result(calculate(task), 1.second)
     println(s"Got result: $result")
 
-    system.shutdown()
-    system.awaitTermination()
+    Await.ready(system.terminate(), Duration.Inf)
   }
 }
